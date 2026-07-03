@@ -17,8 +17,18 @@ import {
 } from "recharts";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { TrendingUp, Info } from "lucide-react";
+import { useSimpleView } from "@/components/layout";
+
+const AXIS_STROKE = "var(--color-muted-foreground)";
+const GRID_STROKE = "var(--color-border)";
+const TOOLTIP_STYLE = {
+  backgroundColor: "var(--color-popover)",
+  borderColor: "var(--color-border)",
+  color: "var(--color-popover-foreground)",
+};
 
 export function Predict() {
+  const { simpleView } = useSimpleView();
   const { data: adoption, isLoading: loadingIndustries } = useGetIndustryAdoption();
   
   const [selectedIndustry, setSelectedIndustry] = useState<string>("");
@@ -67,7 +77,7 @@ export function Predict() {
   }, [forecast]);
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500">
+    <div className="space-y-10 animate-in fade-in duration-500 pb-16">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Adoption Forecast</h1>
         <p className="text-muted-foreground mt-1">Predictive modeling of AI integration timelines to mainstream adoption (50%).</p>
@@ -159,27 +169,42 @@ export function Predict() {
               <ExportButtons data={chartData} filename={`forecast_${selectedIndustry}`} />
             </CardHeader>
             <CardContent>
-              <div className="h-[450px]">
-                {loadingForecast ? (
-                  <Skeleton className="w-full h-full" />
-                ) : chartData.length > 0 ? (
+              {loadingForecast ? (
+                <Skeleton className="w-full h-[450px]" />
+              ) : chartData.length === 0 ? null : simpleView ? (
+                <ul className="space-y-2.5 h-[450px] overflow-y-auto pr-1">
+                  {chartData.map((row) => (
+                    <li key={row.year} className="flex items-center justify-between text-sm border-b border-border pb-2 last:border-0">
+                      <span className="font-medium">{row.year}</span>
+                      <span className="text-muted-foreground">
+                        {row.historical != null ? (
+                          <>Historical: <span className="text-foreground font-semibold">{row.historical.toFixed(1)}%</span></>
+                        ) : (
+                          <>Projected: <span className="text-foreground font-semibold">{row.projected?.toFixed(1)}%</span></>
+                        )}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <div className="h-[450px]">
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 10 }}>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" />
-                      <XAxis dataKey="year" stroke="var(--muted-foreground)" fontSize={12} tickLine={false} />
-                      <YAxis stroke="var(--muted-foreground)" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `${value}%`} />
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={GRID_STROKE} />
+                      <XAxis dataKey="year" stroke={AXIS_STROKE} fontSize={12} tickLine={false} />
+                      <YAxis stroke={AXIS_STROKE} fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `${value}%`} />
                       <RechartsTooltip 
-                        contentStyle={{ backgroundColor: 'var(--popover)', borderColor: 'var(--border)', color: 'var(--popover-foreground)' }}
+                        contentStyle={TOOLTIP_STYLE}
                         formatter={(value: number) => [`${value.toFixed(1)}%`, 'Adoption Rate']}
                       />
                       <Legend />
-                      <ReferenceLine y={50} label={{ position: 'top', value: 'Mainstream Adoption (50%)', fill: 'var(--muted-foreground)', fontSize: 12 }} stroke="var(--muted-foreground)" strokeDasharray="3 3" />
+                      <ReferenceLine y={50} label={{ position: 'top', value: 'Mainstream Adoption (50%)', fill: AXIS_STROKE, fontSize: 12 }} stroke={AXIS_STROKE} strokeDasharray="3 3" />
                       
                       <Line 
                         type="monotone" 
                         dataKey="historical" 
                         name="Historical Data" 
-                        stroke={selectedIndustry ? getIndustryColor(selectedIndustry) : "var(--primary)"} 
+                        stroke={selectedIndustry ? getIndustryColor(selectedIndustry) : "var(--color-primary)"} 
                         strokeWidth={3} 
                         dot={{ r: 4 }} 
                         activeDot={{ r: 6 }} 
@@ -188,7 +213,7 @@ export function Predict() {
                         type="monotone" 
                         dataKey="projected" 
                         name="Forecast" 
-                        stroke={selectedIndustry ? getIndustryColor(selectedIndustry) : "var(--primary)"} 
+                        stroke={selectedIndustry ? getIndustryColor(selectedIndustry) : "var(--color-primary)"} 
                         strokeWidth={3} 
                         strokeDasharray="5 5" 
                         dot={{ r: 4 }} 
@@ -196,8 +221,14 @@ export function Predict() {
                       />
                     </LineChart>
                   </ResponsiveContainer>
-                ) : null}
-              </div>
+                </div>
+              )}
+              {forecast && (
+                <div className="mt-4 text-sm text-muted-foreground bg-muted/50 p-3 rounded-md">
+                  <strong>Takeaway:</strong> {selectedIndustry} is projected to reach {forecast.projectedValue.toFixed(1)}% adoption by {forecast.projectedYear}
+                  {forecast.gapTo50 <= 0 ? ", already past mainstream adoption." : `, ${forecast.gapTo50.toFixed(1)} points short of mainstream (50%) adoption.`}
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>

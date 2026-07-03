@@ -12,8 +12,18 @@ import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer 
 } from "recharts";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { useSimpleView } from "@/components/layout";
+
+const AXIS_STROKE = "var(--color-muted-foreground)";
+const GRID_STROKE = "var(--color-border)";
+const TOOLTIP_STYLE = {
+  backgroundColor: "var(--color-popover)",
+  borderColor: "var(--color-border)",
+  color: "var(--color-popover-foreground)",
+};
 
 export function Compare() {
+  const { simpleView } = useSimpleView();
   const { data: adoption, isLoading } = useGetIndustryAdoption();
   const [selectedIndustries, setSelectedIndustries] = useState<string[]>([]);
 
@@ -63,7 +73,7 @@ export function Compare() {
   }, [adoption, selectedIndustries]);
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500">
+    <div className="space-y-10 animate-in fade-in duration-500 pb-16">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Industry Comparison</h1>
         <p className="text-muted-foreground mt-1">Benchmark AI adoption trajectories across sectors.</p>
@@ -106,28 +116,43 @@ export function Compare() {
               <ExportButtons data={chartData} filename="industry_comparison" />
             </CardHeader>
             <CardContent>
-              <div className="h-[400px]">
-                {isLoading ? (
-                  <Skeleton className="w-full h-full" />
-                ) : chartData.length > 0 ? (
+              {isLoading ? (
+                <Skeleton className="w-full h-[400px]" />
+              ) : chartData.length === 0 ? (
+                <div className="h-[400px] flex items-center justify-center text-muted-foreground">Select industries to compare</div>
+              ) : simpleView ? (
+                <ul className="space-y-2.5">
+                  {tableData.map((row) => (
+                    <li key={row.industry} className="flex items-center justify-between text-sm border-b border-border pb-2 last:border-0">
+                      <span className="flex items-center gap-2">
+                        <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: getIndustryColor(row.industry) }} />
+                        {row.industry}
+                      </span>
+                      <span className="font-semibold">{row.latest}% ({row.yoy > 0 ? "+" : ""}{row.yoy.toFixed(1)}pt YoY)</span>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <div className="h-[400px]">
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={chartData}>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" />
-                      <XAxis dataKey="year" stroke="var(--muted-foreground)" fontSize={12} tickLine={false} />
-                      <YAxis stroke="var(--muted-foreground)" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `${value}%`} />
-                      <RechartsTooltip 
-                        contentStyle={{ backgroundColor: 'var(--popover)', borderColor: 'var(--border)', color: 'var(--popover-foreground)' }} 
-                      />
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={GRID_STROKE} />
+                      <XAxis dataKey="year" stroke={AXIS_STROKE} fontSize={12} tickLine={false} />
+                      <YAxis stroke={AXIS_STROKE} fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `${value}%`} />
+                      <RechartsTooltip contentStyle={TOOLTIP_STYLE} />
                       <Legend />
                       {selectedIndustries.map(ind => (
                         <Line key={ind} type="monotone" dataKey={ind} stroke={getIndustryColor(ind)} strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} />
                       ))}
                     </LineChart>
                   </ResponsiveContainer>
-                ) : (
-                  <div className="h-full flex items-center justify-center text-muted-foreground">Select industries to compare</div>
-                )}
-              </div>
+                </div>
+              )}
+              {tableData.length > 0 && (
+                <div className="mt-4 text-sm text-muted-foreground bg-muted/50 p-3 rounded-md">
+                  <strong>Takeaway:</strong> {tableData[0].industry} leads the selected sectors at {tableData[0].latest}% adoption.
+                </div>
+              )}
             </CardContent>
           </Card>
 

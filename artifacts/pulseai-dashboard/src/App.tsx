@@ -1,7 +1,7 @@
 import React from "react";
 import { Switch, Route, Router as WouterRouter } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { Layout, ThemeProvider } from "./components/layout";
+import { Layout, ThemeProvider, SimpleViewProvider } from "./components/layout";
 import { Home } from "./pages/home";
 import { Compare } from "./pages/compare";
 import { Predict } from "./pages/predict";
@@ -24,7 +24,9 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
-        <Router />
+        <SimpleViewProvider>
+          <Router />
+        </SimpleViewProvider>
       </ThemeProvider>
     </QueryClientProvider>
   );

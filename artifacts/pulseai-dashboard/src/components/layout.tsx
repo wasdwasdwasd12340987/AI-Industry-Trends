@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
-import { Moon, Sun } from "lucide-react";
+import { Moon, Sun, ListChecks, BarChart3 } from "lucide-react";
 import { Button } from "./ui/button";
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
@@ -34,9 +34,42 @@ export const ThemeContext = React.createContext<{
   toggleTheme: () => void;
 }>({ theme: "dark", toggleTheme: () => {} });
 
+export function SimpleViewProvider({ children }: { children: React.ReactNode }) {
+  const [simpleView, setSimpleView] = useState<boolean>(false);
+
+  useEffect(() => {
+    const saved = localStorage.getItem("simpleView");
+    if (saved === "true") setSimpleView(true);
+  }, []);
+
+  const toggleSimpleView = () => {
+    setSimpleView((prev) => {
+      const next = !prev;
+      localStorage.setItem("simpleView", String(next));
+      return next;
+    });
+  };
+
+  return (
+    <SimpleViewContext.Provider value={{ simpleView, toggleSimpleView }}>
+      {children}
+    </SimpleViewContext.Provider>
+  );
+}
+
+export const SimpleViewContext = React.createContext<{
+  simpleView: boolean;
+  toggleSimpleView: () => void;
+}>({ simpleView: false, toggleSimpleView: () => {} });
+
+export function useSimpleView() {
+  return React.useContext(SimpleViewContext);
+}
+
 export function Layout({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
   const { theme, toggleTheme } = React.useContext(ThemeContext);
+  const { simpleView, toggleSimpleView } = React.useContext(SimpleViewContext);
 
   const links = [
     { href: "/", label: "Home" },
@@ -67,6 +100,16 @@ export function Layout({ children }: { children: React.ReactNode }) {
             </nav>
           </div>
           <div className="flex items-center gap-2">
+            <Button
+              variant={simpleView ? "secondary" : "ghost"}
+              size="sm"
+              onClick={toggleSimpleView}
+              title="Toggle Simple View"
+              className="gap-2"
+            >
+              {simpleView ? <ListChecks className="h-4 w-4" /> : <BarChart3 className="h-4 w-4" />}
+              <span className="hidden sm:inline">{simpleView ? "Simple View" : "Chart View"}</span>
+            </Button>
             <Button variant="ghost" size="icon" onClick={toggleTheme} title="Toggle Theme">
               {theme === "light" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
             </Button>
