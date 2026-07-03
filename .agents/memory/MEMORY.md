@@ -1,0 +1,2 @@
+- [Recharts + theme CSS vars](chart-color-css-vars.md) — chart fill/stroke props need raw HSL vars wrapped in `hsl()`; using `var(--chart-N)` directly renders black/gray, not the intended color.
+- [React Query setup](react-query-provider.md) — orval-generated hooks (`useGetX`) require `QueryClientProvider` in the app root; missing it fails silently until runtime with "No QueryClient set".

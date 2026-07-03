@@ -10,6 +10,16 @@ servers:
 tags:
   - name: health
     description: Health operations
+  - name: dashboard
+    description: PulseAI dashboard summary and KPIs
+  - name: adoption
+    description: Industry and global AI adoption data
+  - name: investment
+    description: Private AI investment and public sentiment data
+  - name: tools
+    description: AI tool user growth data
+  - name: forecast
+    description: Linear regression adoption forecasts
 paths:
   /healthz:
     get:
@@ -24,6 +34,134 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+  /dashboard/summary:
+    get:
+      operationId: getDashboardSummary
+      tags: [dashboard]
+      summary: Get homepage snapshot KPIs
+      description: Returns headline KPI cards plus computed totals for the homepage snapshot bar
+      responses:
+        "200":
+          description: Dashboard summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardSummary"
+  /adoption/industries:
+    get:
+      operationId: getIndustryAdoption
+      tags: [adoption]
+      summary: Get AI adoption rate by industry sector (long format)
+      description: Returns Industry Sector, Year, Adoption Rate rows reshaped from the wide CSV
+      responses:
+        "200":
+          description: Industry adoption rows
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IndustryAdoptionResponse"
+  /adoption/global-trend:
+    get:
+      operationId: getGlobalAdoptionTrend
+      tags: [adoption]
+      summary: Get global org AI adoption trend 2017-2025
+      description: AI Any Function % vs GenAI Specifically % by year
+      responses:
+        "200":
+          description: Global adoption trend rows
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/GlobalTrendPoint"
+  /adoption/business-function:
+    get:
+      operationId: getBusinessFunctionAdoption
+      tags: [adoption]
+      summary: Get AI adoption by business function 2021-2025
+      responses:
+        "200":
+          description: Business function adoption rows
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/BusinessFunctionPoint"
+  /investment/by-country:
+    get:
+      operationId: getInvestmentByCountry
+      tags: [investment]
+      summary: Get private AI investment by country, 2019-2024 ($B)
+      responses:
+        "200":
+          description: Investment rows
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/InvestmentPoint"
+  /investment/sentiment:
+    get:
+      operationId: getSentimentByCountry
+      tags: [investment]
+      summary: Get public AI sentiment by country
+      responses:
+        "200":
+          description: Sentiment rows
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SentimentPoint"
+  /tools/users:
+    get:
+      operationId: getToolUserGrowth
+      tags: [tools]
+      summary: Get AI tool user growth milestones
+      responses:
+        "200":
+          description: Tool user growth rows
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ToolUserPoint"
+  /forecast:
+    get:
+      operationId: getForecast
+      tags: [forecast]
+      summary: Forecast adoption rate for an industry using linear regression
+      parameters:
+        - name: industry
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: yearsAhead
+          in: query
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 5
+      responses:
+        "200":
+          description: Forecast result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ForecastResponse"
+        "400":
+          description: Invalid industry or yearsAhead
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
 components:
   schemas:
     HealthStatus:
@@ -33,4 +171,181 @@ components:
           type: string
       required:
         - status
-
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+      required:
+        - error
+    KpiItem:
+      type: object
+      properties:
+        metric:
+          type: string
+        value:
+          type: string
+        period:
+          type: string
+        source:
+          type: string
+      required: [metric, value, period, source]
+    DashboardSummary:
+      type: object
+      properties:
+        totalPrivateInvestment2024B:
+          type: number
+        averageAdoptionRate2025:
+          type: number
+        leadingIndustry:
+          type: string
+        leadingIndustryRate2025:
+          type: number
+        kpis:
+          type: array
+          items:
+            $ref: "#/components/schemas/KpiItem"
+        lastUpdated:
+          type: string
+          format: date-time
+        sources:
+          type: array
+          items:
+            type: string
+      required:
+        - totalPrivateInvestment2024B
+        - averageAdoptionRate2025
+        - leadingIndustry
+        - leadingIndustryRate2025
+        - kpis
+        - lastUpdated
+        - sources
+    IndustryAdoptionRow:
+      type: object
+      properties:
+        industry:
+          type: string
+        year:
+          type: string
+        adoptionRate:
+          type: number
+        keyDataPoint:
+          type: string
+      required: [industry, year, adoptionRate, keyDataPoint]
+    IndustryAdoptionResponse:
+      type: object
+      properties:
+        industries:
+          type: array
+          items:
+            type: string
+        rows:
+          type: array
+          items:
+            $ref: "#/components/schemas/IndustryAdoptionRow"
+        summaries:
+          type: object
+          additionalProperties:
+            type: string
+      required: [industries, rows, summaries]
+    GlobalTrendPoint:
+      type: object
+      properties:
+        year:
+          type: string
+        aiAnyFunctionPct:
+          type: number
+        genAiSpecificallyPct:
+          type: number
+          nullable: true
+        topFunction1:
+          type: string
+      required: [year, aiAnyFunctionPct, genAiSpecificallyPct, topFunction1]
+    BusinessFunctionPoint:
+      type: object
+      properties:
+        function:
+          type: string
+        year:
+          type: string
+        adoptionRate:
+          type: number
+      required: [function, year, adoptionRate]
+    InvestmentPoint:
+      type: object
+      properties:
+        country:
+          type: string
+        year:
+          type: string
+        investmentB:
+          type: number
+      required: [country, year, investmentB]
+    SentimentPoint:
+      type: object
+      properties:
+        country:
+          type: string
+        beneficialPct:
+          type: number
+        changeJobPct:
+          type: number
+          nullable: true
+        fearReplacePct:
+          type: number
+          nullable: true
+      required: [country, beneficialPct, changeJobPct, fearReplacePct]
+    ToolUserPoint:
+      type: object
+      properties:
+        tool:
+          type: string
+        metricType:
+          type: string
+        period:
+          type: string
+        value:
+          type: number
+        unit:
+          type: string
+      required: [tool, metricType, period, value, unit]
+    ForecastPoint:
+      type: object
+      properties:
+        year:
+          type: number
+        adoptionRate:
+          type: number
+      required: [year, adoptionRate]
+    ForecastResponse:
+      type: object
+      properties:
+        industry:
+          type: string
+        historical:
+          type: array
+          items:
+            $ref: "#/components/schemas/ForecastPoint"
+        projected:
+          type: array
+          items:
+            $ref: "#/components/schemas/ForecastPoint"
+        projectedYear:
+          type: number
+        projectedValue:
+          type: number
+        gapTo50:
+          type: number
+        slope:
+          type: number
+        intercept:
+          type: number
+      required:
+        - industry
+        - historical
+        - projected
+        - projectedYear
+        - projectedValue
+        - gapTo50
+        - slope
+        - intercept

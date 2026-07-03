@@ -1,0 +1,31 @@
+kind = "data-app"
+previewPath = "/"
+title = "PulseAI: Industry AI Adoption Dashboard"
+version = "1.0.0"
+id = "artifacts/pulseai-dashboard"
+router = "path"
+
+[[integratedSkills]]
+name = "data-visualization"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 23085
+
+[services.development]
+run = "pnpm --filter @workspace/pulseai-dashboard run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/pulseai-dashboard", "run", "build" ]
+publicDir = "artifacts/pulseai-dashboard/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "23085"
+BASE_PATH = "/"

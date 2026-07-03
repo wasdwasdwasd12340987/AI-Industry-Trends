@@ -1,0 +1,104 @@
+Replit Build Prompt — AI Industry Adoption Dashboard
+
+Copy everything below into Replit's AI app builder. Swap in your actual CSV filename(s) where marked.
+
+
+BUILD an AI webpage/dashboard using my uploaded data files:
+
+
+5_Adoption_By_Industry.csv (main dataset — Industry Sector, 2022–2025 Adoption %)
+1_McKinsey_Org_Adoption.csv (global AI adoption 2017–2025, by function)
+2_AI_By_Business_Function.csv (adoption % by business function, 2021–2025)
+3_AI_Tool_Users_Global.csv (ChatGPT/tool user growth milestones)
+4_Investment_By_Country.csv (private AI investment $B by country, 2019–2024)
+6_Public_Sentiment_By_Country.csv (public sentiment on AI by country)
+7_Key_KPIs_Summary.csv (headline KPI figures for a stats bar)
+
+
+All files share verified sourcing (McKinsey, Stanford AI Index, IBM, PwC, OpenAI, Reuters) noted in each file's header rows — keep source citations visible in the app.
+
+APP_FEATURES
+
+Homepage
+
+
+Top-of-page snapshot bar with stat cards pulled from 7_Key_KPIs_Summary.csv (e.g., "88% of orgs use AI in ≥1 function, 2025") plus: Total Private AI Investment (sum of latest year, from 4_Investment_By_Country.csv), Average Adoption Rate across industries (from 5_Adoption_By_Industry.csv), and Leading Industry (highest 2025 Adoption %)
+Below the snapshot: a line chart of adoption rate by industry over time (Industry Sector, 2022–2025 %), each industry its own color
+A second chart: global AI adoption trend 2017–2025 (from 1_McKinsey_Org_Adoption.csv), showing "AI Any Function %" vs "GenAI Specifically %"
+A short text summary above each chart, auto-generated from the data (e.g., "Technology/Software leads all sectors at 92% adoption in 2025")
+Charts should be interactive (hover for exact values, tooltips with year + industry)
+
+
+Comparison Tab/Page
+
+
+Let the user select 2+ industries from 5_Adoption_By_Industry.csv (Industry Sector column) and compare them side by side across 2022–2025 Adoption %
+Also let the user compute, per industry: Year-over-Year Growth and Acceleration (derived — YoY growth of the YoY growth) from the yearly adoption columns
+Output as an overlaid line chart plus a small summary table (industry, latest adoption %, YoY growth, rank)
+
+
+Investment & Sentiment Tab
+
+
+Bar or map chart of private AI investment by country (4_Investment_By_Country.csv, 2019–2024, $B)
+Companion chart: public sentiment by country — % who see AI as beneficial (6_Public_Sentiment_By_Country.csv)
+Let user click a country to see both investment trend and sentiment side by side
+
+
+Prediction/Forecast Tab
+
+
+User picks an industry (from 5_Adoption_By_Industry.csv) and a future year (1–5 years past 2025)
+Fit Linear Regression on Year vs. Adoption % for that industry, then project forward
+Show the historical trend line plus the projected dashed line
+Display the projected adoption % numerically alongside the chart
+Optional: also show "gap to 50% adoption" (mainstream threshold) the way my notebook does — see below
+
+
+General
+
+
+Clean navigation between Home / Compare / Predict
+Citations/source note for the dataset visible somewhere (footer or About section)
+Responsive layout (works on mobile and desktop)
+
+
+MODEL & LOGIC INSTRUCTIONS
+
+
+Use a Linear Regression model for any future-year predictions (fit per industry on Year vs. Adoption %; extend the line to the selected future year). This matches the model I already tested — I compared Linear Regression, Random Forest, and a Neural Network in my own notebook (Mohammed_Visuals_Data_Set.ipynb) predicting "gap_to_50" (how far each industry is from 50% mainstream adoption); Linear Regression is the one to use for the live app for simplicity and interpretability.
+Homepage should combine text + plots — not just charts. Each industry section gets a 1–2 sentence auto-generated summary (e.g., "Adoption in Healthcare grew from X% to Y% between 2022–2025") above or beside its chart.
+Include a dedicated Compare tab so users can move between the homepage overview and a focused side-by-side comparison view without losing context.
+Reshape 5_Adoption_By_Industry.csv from wide format (one column per year) to long format (Industry Sector, Year, Adoption Rate) before charting or modeling — this matches the structure I used in my notebook.
+
+
+I don't want to:
+
+
+(fill in — e.g., "don't want a login/signup system," "don't want the forecast to extrapolate more than 5 years out," "don't want raw data tables on the homepage")
+
+
+APP_TITLE
+
+APP_NAME = "PulseAI: Industry AI Adoption Dashboard"
+
+APP_SUBHEADER
+
+APP_SUBHEADER = "Track how industries are adopting AI — explore investment, adoption rates, and where it's headed next."
+
+APP_THEME
+
+APP_THEME = "Clean and modern, data-forward. Dark mode toggle. One consistent color per industry across all charts so users can visually track a sector across tabs."
+
+EXTRA
+
+EXTRA = "Source citation/footer for the dataset, tooltips on all charts, a small 'last updated' timestamp, downloadable chart images or CSV export of filtered data"
+
+
+Notes for you before sending this to Replit:
+
+
+All 7 real filenames are now filled in above, matching your uploaded CSVs (and the combined AI_Global_Trends_Dataset.xlsx, which has the same 7 sheets — mention to Replit it can use either the CSVs or that single Excel file with 7 tabs).
+"Leading Industry" is now defined as highest 2025 Adoption % — change this line if you'd rather rank by investment instead.
+The "I don't want" section is still empty — worth filling in even briefly (e.g., no login system, no raw data tables cluttering the homepage) so Replit doesn't bolt on extras you didn't ask for.
+Your notebook (Mohammed_Visuals_Data_Set.ipynb) is referenced directly in the Model & Logic section so Replit builds on what you already tested rather than starting from scratch.
