@@ -6,13 +6,16 @@ import { ExportButtons } from "@/components/export-buttons";
 import { getIndustryColor } from "@/lib/colors";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuCheckboxItem, DropdownMenuLabel, DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
 import { 
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer 
 } from "recharts";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useSimpleView } from "@/components/layout";
+import { ChevronDown } from "lucide-react";
 
 const AXIS_STROKE = "var(--color-muted-foreground)";
 const GRID_STROKE = "var(--color-border)";
@@ -85,24 +88,44 @@ export function Compare() {
             <CardTitle>Sectors</CardTitle>
             <CardDescription>Select industries to compare</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-3">
             {isLoading ? (
-              Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-4 w-full" />)
+              <Skeleton className="h-9 w-full" />
             ) : (
-              adoption?.industries.map(ind => (
-                <div key={ind} className="flex items-center space-x-2">
-                  <Checkbox 
-                    id={`ind-${ind}`} 
-                    checked={selectedIndustries.includes(ind)}
-                    onCheckedChange={() => toggleIndustry(ind)}
-                  />
-                  <div className="flex items-center gap-2 flex-1">
-                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: getIndustryColor(ind) }} />
-                    <Label htmlFor={`ind-${ind}`} className="cursor-pointer flex-1 leading-tight">{ind}</Label>
-                  </div>
-                </div>
-              ))
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" className="w-full justify-between">
+                    {selectedIndustries.length === 0 ? "Select sectors…" : `${selectedIndustries.length} sector${selectedIndustries.length > 1 ? "s" : ""} selected`}
+                    <ChevronDown className="h-4 w-4 opacity-50" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-64 max-h-80 overflow-y-auto" align="start">
+                  <DropdownMenuLabel>Industries</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  {adoption?.industries.map(ind => (
+                    <DropdownMenuCheckboxItem
+                      key={ind}
+                      checked={selectedIndustries.includes(ind)}
+                      onCheckedChange={() => toggleIndustry(ind)}
+                      onSelect={(e) => e.preventDefault()}
+                    >
+                      <div className="flex items-center gap-2">
+                        <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: getIndustryColor(ind) }} />
+                        {ind}
+                      </div>
+                    </DropdownMenuCheckboxItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
             )}
+            <div className="flex flex-wrap gap-1.5">
+              {selectedIndustries.map(ind => (
+                <span key={ind} className="inline-flex items-center gap-1 text-xs bg-muted rounded-full px-2 py-1">
+                  <div className="w-2 h-2 rounded-full" style={{ backgroundColor: getIndustryColor(ind) }} />
+                  {ind}
+                </span>
+              ))}
+            </div>
           </CardContent>
         </Card>
 

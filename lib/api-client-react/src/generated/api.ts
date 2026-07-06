@@ -19,7 +19,9 @@ import type {
   BusinessFunctionPoint,
   DashboardSummary,
   ErrorResponse,
+  ForecastAllItem,
   ForecastResponse,
+  GetForecastAllParams,
   GetForecastParams,
   GlobalTrendPoint,
   HealthStatus,
@@ -748,6 +750,90 @@ export function useGetForecast<TData = Awaited<ReturnType<typeof getForecast>>, 
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getGetForecastQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetForecastAllUrl = (params: GetForecastAllParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/forecast/all?${stringifiedParams}` : `/api/forecast/all`
+}
+
+/**
+ * @summary Projected adoption rate for every industry at a fixed target year
+ */
+export const getForecastAll = async (params: GetForecastAllParams, options?: RequestInit): Promise<ForecastAllItem[]> => {
+
+  return customFetch<ForecastAllItem[]>(getGetForecastAllUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetForecastAllQueryKey = (params?: GetForecastAllParams,) => {
+    return [
+    `/api/forecast/all`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetForecastAllQueryOptions = <TData = Awaited<ReturnType<typeof getForecastAll>>, TError = ErrorType<ErrorResponse>>(params: GetForecastAllParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getForecastAll>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetForecastAllQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getForecastAll>>> = ({ signal }) => getForecastAll(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getForecastAll>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetForecastAllQueryResult = NonNullable<Awaited<ReturnType<typeof getForecastAll>>>
+export type GetForecastAllQueryError = ErrorType<ErrorResponse>
+
+
+/**
+ * @summary Projected adoption rate for every industry at a fixed target year
+ */
+
+export function useGetForecastAll<TData = Awaited<ReturnType<typeof getForecastAll>>, TError = ErrorType<ErrorResponse>>(
+ params: GetForecastAllParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getForecastAll>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetForecastAllQueryOptions(params,options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

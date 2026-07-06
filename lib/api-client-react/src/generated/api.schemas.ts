@@ -93,10 +93,26 @@ export interface ForecastResponse {
   gapTo50: number;
   slope: number;
   intercept: number;
+  r2: number;
+  mae: number;
+}
+
+export interface ForecastAllItem {
+  industry: string;
+  projectedYear: number;
+  projectedValue: number;
 }
 
 export type GetForecastParams = {
 industry: string;
+/**
+ * @minimum 1
+ * @maximum 5
+ */
+yearsAhead: number;
+};
+
+export type GetForecastAllParams = {
 /**
  * @minimum 1
  * @maximum 5

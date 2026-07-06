@@ -157,6 +157,34 @@ paths:
               schema:
                 $ref: "#/components/schemas/ForecastResponse"
         "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /forecast/all:
+    get:
+      operationId: getForecastAll
+      tags: [forecast]
+      summary: Projected adoption rate for every industry at a fixed target year
+      parameters:
+        - name: yearsAhead
+          in: query
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 5
+      responses:
+        "200":
+          description: Forecast summary per industry
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ForecastAllItem"
+        "400":
           description: Invalid industry or yearsAhead
           content:
             application/json:
@@ -340,6 +368,10 @@ components:
           type: number
         intercept:
           type: number
+        r2:
+          type: number
+        mae:
+          type: number
       required:
         - industry
         - historical
@@ -349,3 +381,15 @@ components:
         - gapTo50
         - slope
         - intercept
+        - r2
+        - mae
+    ForecastAllItem:
+      type: object
+      properties:
+        industry:
+          type: string
+        projectedYear:
+          type: number
+        projectedValue:
+          type: number
+      required: [industry, projectedYear, projectedValue]

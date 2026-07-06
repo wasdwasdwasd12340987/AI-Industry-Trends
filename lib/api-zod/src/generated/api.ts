@@ -139,7 +139,28 @@ export const GetForecastResponse = zod.object({
   "projectedValue": zod.number(),
   "gapTo50": zod.number(),
   "slope": zod.number(),
-  "intercept": zod.number()
+  "intercept": zod.number(),
+  "r2": zod.number(),
+  "mae": zod.number()
 })
+
+
+/**
+ * @summary Projected adoption rate for every industry at a fixed target year
+ */
+export const getForecastAllQueryYearsAheadMax = 5;
+
+
+
+export const GetForecastAllQueryParams = zod.object({
+  "yearsAhead": zod.coerce.number().min(1).max(getForecastAllQueryYearsAheadMax)
+})
+
+export const GetForecastAllResponseItem = zod.object({
+  "industry": zod.string(),
+  "projectedYear": zod.number(),
+  "projectedValue": zod.number()
+})
+export const GetForecastAllResponse = zod.array(GetForecastAllResponseItem)
 
 

@@ -40,6 +40,10 @@ const CURSOR_FILL = { fill: "var(--color-muted)", opacity: 0.4 };
 
 const HEADLINE_COUNT = 4;
 
+function truncateLabel(value: string): string {
+  return value.length > 10 ? `${value.slice(0, 9)}…` : value;
+}
+
 function formatMillions(value: number): number {
   return Math.round((value / 1_000_000) * 10) / 10;
 }
@@ -124,6 +128,11 @@ export function Home() {
     if (!sentiment) return [];
     return sentiment.sort((a, b) => b.beneficialPct - a.beneficialPct).slice(0, 8);
   }, [sentiment]);
+
+  const hasFearData = useMemo(
+    () => topSentimentCountries.filter((c) => c.fearReplacePct != null).length > 1,
+    [topSentimentCountries],
+  );
 
   const toolsInMillions = useMemo(() => {
     if (!tools) return [];
@@ -394,9 +403,9 @@ export function Home() {
                 ) : (
                   <div className="h-[280px]">
                     <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={topInvestmentCountries} margin={{ bottom: 24 }}>
+                      <BarChart data={topInvestmentCountries} margin={{ bottom: 8 }}>
                         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={GRID_STROKE} />
-                        <XAxis dataKey="country" stroke={AXIS_STROKE} fontSize={11} tickLine={false} interval={0} angle={-20} textAnchor="end" height={50} />
+                        <XAxis dataKey="country" stroke={AXIS_STROKE} fontSize={11} tickLine={false} interval={0} angle={0} textAnchor="middle" height={30} tickFormatter={truncateLabel} />
                         <YAxis stroke={AXIS_STROKE} fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `$${value}B`} />
                         <RechartsTooltip contentStyle={TOOLTIP_STYLE} cursor={CURSOR_FILL} />
                         <Bar dataKey="investmentB" name="Investment" fill="var(--color-chart-3)" radius={[4, 4, 0, 0]} />
@@ -436,10 +445,17 @@ export function Home() {
                         <RechartsTooltip contentStyle={TOOLTIP_STYLE} cursor={CURSOR_FILL} />
                         <Legend />
                         <Bar dataKey="beneficialPct" name="Beneficial" fill="var(--color-chart-1)" radius={[4, 4, 0, 0]} />
-                        <Bar dataKey="fearReplacePct" name="Fear Job Loss" fill="var(--color-destructive)" radius={[4, 4, 0, 0]} />
+                        {hasFearData && (
+                          <Bar dataKey="fearReplacePct" name="Fear Job Loss" fill="var(--color-destructive)" radius={[4, 4, 0, 0]} />
+                        )}
                       </BarChart>
                     </ResponsiveContainer>
                   </div>
+                )}
+                {!hasFearData && (
+                  <p className="mt-2 text-xs text-muted-foreground italic">
+                    Fear-of-job-loss data is only available for the Global Average; not surveyed per-country.
+                  </p>
                 )}
                 {topSentimentCountries.length > 0 && (
                   <div className="mt-4 text-sm text-muted-foreground bg-muted/50 p-3 rounded-md">

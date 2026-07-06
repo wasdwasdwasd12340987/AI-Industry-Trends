@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { 
   useGetIndustryAdoption,
   useGetForecast,
+  useGetForecastAll,
   getGetForecastQueryKey
 } from "@workspace/api-client-react";
 import { ExportButtons } from "@/components/export-buttons";
@@ -85,6 +86,12 @@ export function Predict() {
   }, [forecast]);
 
   const isCapped = rawProjectedValue != null && (rawProjectedValue > 100 || rawProjectedValue < 0);
+
+  const { data: forecastAll, isLoading: loadingForecastAll } = useGetForecastAll({ yearsAhead });
+  const sortedForecastAll = React.useMemo(
+    () => (forecastAll ? [...forecastAll].sort((a, b) => b.projectedValue - a.projectedValue) : []),
+    [forecastAll],
+  );
 
   return (
     <div className="space-y-10 animate-in fade-in duration-500 pb-16">

@@ -16,4 +16,6 @@ export interface ForecastResponse {
   gapTo50: number;
   slope: number;
   intercept: number;
+  r2: number;
+  mae: number;
 }

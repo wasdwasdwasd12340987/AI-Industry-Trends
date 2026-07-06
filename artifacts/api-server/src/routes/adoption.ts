@@ -45,7 +45,7 @@ router.get("/adoption/industries", (_req, res) => {
     if (rate2022 !== null && rate2025 !== null) {
       const growth = Math.round((rate2025 - rate2022) * 10) / 10;
       summaries[industry] =
-        `${industry} adoption rose from ${rate2022}% (2022) to ${rate2025}% (2025), a ${growth >= 0 ? "+" : ""}${growth}pp change. ${keyDataPoint}`;
+        `Rose from ${rate2022}% (2022) to ${rate2025}% (2025), a ${growth >= 0 ? "+" : ""}${growth}pp change.`;
     }
   }
 
