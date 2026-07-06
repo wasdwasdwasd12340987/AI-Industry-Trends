@@ -40,6 +40,10 @@ const CURSOR_FILL = { fill: "var(--color-muted)", opacity: 0.4 };
 
 const HEADLINE_COUNT = 4;
 
+function formatMillions(value: number): number {
+  return Math.round((value / 1_000_000) * 10) / 10;
+}
+
 function categorizeKpi(metric: string): string {
   const m = metric.toLowerCase();
   if (/invest|funding|capital|spend/.test(m)) return "Investment & Spend";
@@ -121,9 +125,14 @@ export function Home() {
     return sentiment.sort((a, b) => b.beneficialPct - a.beneficialPct).slice(0, 8);
   }, [sentiment]);
 
+  const toolsInMillions = useMemo(() => {
+    if (!tools) return [];
+    return tools.map((t) => ({ ...t, valueM: formatMillions(t.value) }));
+  }, [tools]);
+
   const topFunctions = useMemo(() => {
     if (!functions) return [];
-    return functions.filter(f => f.year === "2025" || f.year === "Late 2024").sort((a, b) => b.adoptionRate - a.adoptionRate).slice(0, 6);
+    return functions.filter(f => f.year === "2025").sort((a, b) => b.adoptionRate - a.adoptionRate).slice(0, 6);
   }, [functions]);
 
   return (
@@ -337,11 +346,15 @@ export function Home() {
                 </ResponsiveContainer>
               </div>
             )}
-            {trend && trend.length > 0 && (
-              <div className="mt-4 text-sm text-muted-foreground bg-muted/50 p-3 rounded-md">
-                <strong>Takeaway:</strong> Generative AI adoption jumped from {trend[0].genAiSpecificallyPct}% to {trend[trend.length - 1].genAiSpecificallyPct}% since {trend[0].year}, accelerating overall AI integration globally.
-              </div>
-            )}
+            {trend && trend.length > 0 && (() => {
+              const firstGenAi = trend.find((p) => p.genAiSpecificallyPct != null);
+              const latest = trend[trend.length - 1];
+              return firstGenAi && latest.genAiSpecificallyPct != null ? (
+                <div className="mt-4 text-sm text-muted-foreground bg-muted/50 p-3 rounded-md">
+                  <strong>Takeaway:</strong> Generative AI adoption jumped from {firstGenAi.genAiSpecificallyPct}% to {latest.genAiSpecificallyPct}% since {firstGenAi.year}, accelerating overall AI integration globally.
+                </div>
+              ) : null;
+            })()}
           </CardContent>
         </Card>
       </section>
@@ -381,9 +394,9 @@ export function Home() {
                 ) : (
                   <div className="h-[280px]">
                     <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={topInvestmentCountries}>
+                      <BarChart data={topInvestmentCountries} margin={{ bottom: 24 }}>
                         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={GRID_STROKE} />
-                        <XAxis dataKey="country" stroke={AXIS_STROKE} fontSize={12} tickLine={false} />
+                        <XAxis dataKey="country" stroke={AXIS_STROKE} fontSize={11} tickLine={false} interval={0} angle={-20} textAnchor="end" height={50} />
                         <YAxis stroke={AXIS_STROKE} fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `$${value}B`} />
                         <RechartsTooltip contentStyle={TOOLTIP_STYLE} cursor={CURSOR_FILL} />
                         <Bar dataKey="investmentB" name="Investment" fill="var(--color-chart-3)" radius={[4, 4, 0, 0]} />
@@ -493,26 +506,26 @@ export function Home() {
                     {[...tools].sort((a, b) => b.value - a.value).map((row) => (
                       <li key={row.tool} className="flex items-center justify-between text-sm border-b border-border pb-2 last:border-0">
                         <span>{row.tool}</span>
-                        <span className="font-semibold">{row.value}M users</span>
+                        <span className="font-semibold">{formatMillions(row.value)}M users</span>
                       </li>
                     ))}
                   </ul>
                 ) : (
                   <div className="h-[280px]">
                     <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={tools} layout="vertical" margin={{ left: 40 }}>
+                      <BarChart data={toolsInMillions} layout="vertical" margin={{ left: 40 }}>
                         <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke={GRID_STROKE} />
-                        <XAxis type="number" stroke={AXIS_STROKE} fontSize={12} tickLine={false} />
-                        <YAxis dataKey="tool" type="category" stroke={AXIS_STROKE} fontSize={12} tickLine={false} axisLine={false} />
-                        <RechartsTooltip contentStyle={TOOLTIP_STYLE} cursor={CURSOR_FILL} />
-                        <Bar dataKey="value" name="Users (Millions)" fill="var(--color-chart-5)" radius={[0, 4, 4, 0]} />
+                        <XAxis type="number" stroke={AXIS_STROKE} fontSize={12} tickLine={false} tickFormatter={(value) => `${value}M`} />
+                        <YAxis dataKey="tool" type="category" stroke={AXIS_STROKE} fontSize={12} tickLine={false} axisLine={false} width={130} />
+                        <RechartsTooltip contentStyle={TOOLTIP_STYLE} cursor={CURSOR_FILL} formatter={(value: number) => [`${value}M`, "Users"]} />
+                        <Bar dataKey="valueM" name="Users (Millions)" fill="var(--color-chart-5)" radius={[0, 4, 4, 0]} />
                       </BarChart>
                     </ResponsiveContainer>
                   </div>
                 )}
                 {tools && tools.length > 0 && (
                   <div className="mt-4 text-sm text-muted-foreground bg-muted/50 p-3 rounded-md">
-                    <strong>Takeaway:</strong> {[...tools].sort((a, b) => b.value - a.value)[0].tool} leads AI tool adoption with {[...tools].sort((a, b) => b.value - a.value)[0].value}M active users.
+                    <strong>Takeaway:</strong> {[...tools].sort((a, b) => b.value - a.value)[0].tool} leads AI tool adoption with {formatMillions([...tools].sort((a, b) => b.value - a.value)[0].value)}M active users.
                   </div>
                 )}
               </TabsContent>

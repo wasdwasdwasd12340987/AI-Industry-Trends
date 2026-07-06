@@ -185,7 +185,7 @@ export function Compare() {
                               {row.yoy > 0 ? "+" : ""}{row.yoy.toFixed(1)}%
                             </span>
                           </TableCell>
-                          <TableCell className="text-sm text-muted-foreground max-w-[300px] truncate" title={row.summary}>
+                          <TableCell className="text-sm text-muted-foreground max-w-[320px] whitespace-normal break-words">
                             {row.summary}
                           </TableCell>
                         </TableRow>

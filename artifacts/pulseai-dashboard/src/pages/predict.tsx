@@ -76,6 +76,16 @@ export function Predict() {
     return combined;
   }, [forecast]);
 
+  // The server clamps projectedValue/adoptionRate to [0, 100]. Recompute the
+  // raw, uncapped linear-regression value from slope/intercept so we can show
+  // the user when the projection has been capped rather than silently flattening.
+  const rawProjectedValue = React.useMemo(() => {
+    if (!forecast) return null;
+    return forecast.slope * forecast.projectedYear + forecast.intercept;
+  }, [forecast]);
+
+  const isCapped = rawProjectedValue != null && (rawProjectedValue > 100 || rawProjectedValue < 0);
+
   return (
     <div className="space-y-10 animate-in fade-in duration-500 pb-16">
       <div>
@@ -136,6 +146,11 @@ export function Predict() {
                   <div>
                     <div className="text-sm text-muted-foreground">Target Year ({forecast.projectedYear})</div>
                     <div className="text-2xl font-bold">{forecast.projectedValue.toFixed(1)}%</div>
+                    {isCapped && rawProjectedValue != null && (
+                      <div className="text-xs text-muted-foreground mt-1">
+                        Capped at {rawProjectedValue > 100 ? "100% (mainstream saturation)" : "0%"} — raw linear trend projects {rawProjectedValue.toFixed(1)}%.
+                      </div>
+                    )}
                   </div>
                   
                   <div>
@@ -227,6 +242,9 @@ export function Predict() {
                 <div className="mt-4 text-sm text-muted-foreground bg-muted/50 p-3 rounded-md">
                   <strong>Takeaway:</strong> {selectedIndustry} is projected to reach {forecast.projectedValue.toFixed(1)}% adoption by {forecast.projectedYear}
                   {forecast.gapTo50 <= 0 ? ", already past mainstream adoption." : `, ${forecast.gapTo50.toFixed(1)} points short of mainstream (50%) adoption.`}
+                  {isCapped && rawProjectedValue != null && rawProjectedValue > 100 && (
+                    <> The uncapped linear trend actually projects {rawProjectedValue.toFixed(1)}%, so real-world growth is likely to slow (S-curve) well before then.</>
+                  )}
                 </div>
               )}
             </CardContent>

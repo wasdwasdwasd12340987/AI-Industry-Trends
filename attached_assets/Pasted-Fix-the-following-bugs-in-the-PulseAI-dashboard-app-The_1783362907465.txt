@@ -1,0 +1,65 @@
+Fix the following bugs in the PulseAI dashboard app. The underlying dataset 
+(COMBINED_AI_GLOBAL_TRENDS.csv) only contains 5 time points per industry: 
+2022, 2023, 2024.25 ("Early 2024"), 2024.75 ("Late 2024"), and 2025. Columns 
+include: Industry Sector, Year, Adoption Rate, delta_1, yoy_growth, accel, 
+time_idx, gap_to_50, per-business-function adoption columns (Human Resources, 
+IT & Software Engineering, Knowledge Management, Manufacturing/Ops, Marketing 
+& Sales, Product & Service Dev, R&D / Science, Risk & Finance, Service 
+Operations, Strategy & Corp Finance, Supply Chain & Inventory), and Global 
+Investment.
+
+1. GLOBAL TREND CHART (Home page)
+   - Remove the fabricated pre-2022 data (currently shows a fake trend line 
+     back to 2017). Chart should only plot real years present in the dataset.
+   - Fix the takeaway text template — it currently renders "jumped from % to 
+     79%" with a blank/undefined starting value. Find the variable that's 
+     supposed to hold the earliest adoption rate and make sure it's actually 
+     being read from the data (check for a wrong key name or off-by-one index 
+     into the sorted-by-year array) instead of rendering undefined/NaN as an 
+     empty string.
+
+2. INVESTMENT BAR CHART (Compare/Global Perspective page)
+   - The x-axis labels don't match the bars: the tallest bar (should be 
+     United States, per the takeaway text "$109.1B") has no label, while 
+     China, India, Japan, South Korea appear on shorter bars. This is a 
+     sort/label mismatch — find where the data is sorted by value and make 
+     sure the labels array is sorted together with it (sort an array of 
+     {country, value} objects, don't sort values and labels separately).
+
+3. BUSINESS FUNCTIONS BAR CHART
+   - Duplicate categories appear ("IT & Software Engineering" and "Marketing 
+     & Sales" each show up twice). Find the aggregation/groupBy logic and fix 
+     it so it's keyed uniquely by function name — dedupe before rendering.
+
+4. TOOL GROWTH CHART
+   - Same duplicate-entry bug as #3 (e.g., "ChatGPT (OpenAI)" appears 3 
+     times). Apply the same groupBy/dedupe fix.
+   - Labels overlap and are unreadable — increase row height per bar or 
+     truncate/rotate labels so each tool name is legible.
+   - Fix the takeaway number formatting — it currently shows "5600000000M" 
+     (raw value with an incorrect "M" suffix appended). Either divide the 
+     raw count by 1,000,000 before appending "M", or don't divide and drop 
+     the suffix — pick one consistent formatting function and use it 
+     everywhere numbers are displayed.
+
+5. PERFORMANCE SUMMARY TABLE (Compare page)
+   - "Key Insight" column text gets cut off mid-sentence with no way to see 
+     the rest. Widen the column, wrap the text, or add a tooltip/expand-on-
+     click so the full insight is readable.
+
+6. ADOPTION FORECAST (Predict page)
+   - The line labeled "Linear Regression Projection" flattens hard at 
+     exactly 100% starting around 2025.5, which isn't consistent with a real 
+     linear regression (it should keep climbing past 100 unless capped). 
+     Either:
+     (a) switch the projection to a logistic/saturating curve so it 
+         naturally approaches 100% instead of hitting a hard ceiling, or
+     (b) if keeping linear regression + a Math.min(pred, 100) clamp, show 
+         both the raw uncapped projected value and the capped display value 
+         so "Target Year: 100.0%" doesn't misleadingly hide the real slope.
+   - Double check the "Gap to Mainstream" / "Already Achieved" logic still 
+     makes sense once the above is fixed.
+
+After fixing, verify against the actual CSV data (not hardcoded/mock values) 
+for at least 2-3 industries to confirm charts and takeaway text match the 
+real numbers.

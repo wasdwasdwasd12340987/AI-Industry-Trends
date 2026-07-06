@@ -53,8 +53,12 @@ router.get("/adoption/industries", (_req, res) => {
   res.json(data);
 });
 
+const REAL_TREND_YEARS = new Set(["2022", "2023", "Early 2024", "Late 2024", "2025"]);
+
 router.get("/adoption/global-trend", (_req, res) => {
-  const csvRows = loadCsvDataRows("1_mckinsey_org_adoption.csv", 3);
+  const csvRows = loadCsvDataRows("1_mckinsey_org_adoption.csv", 3).filter((row) =>
+    REAL_TREND_YEARS.has(row["Year"]?.trim() ?? ""),
+  );
 
   const data = csvRows.map((row) => {
     const point = {
