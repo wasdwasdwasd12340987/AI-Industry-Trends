@@ -4,7 +4,6 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Layout, ThemeProvider, SimpleViewProvider } from "./components/layout";
 import { Home } from "./pages/home";
 import { Compare } from "./pages/compare";
-import { Predict } from "./pages/predict";
 
 const queryClient = new QueryClient();
 
@@ -14,7 +13,6 @@ function Router() {
       <Switch>
         <Route path="/" component={Home} />
         <Route path="/compare" component={Compare} />
-        <Route path="/predict" component={Predict} />
       </Switch>
     </Layout>
   );

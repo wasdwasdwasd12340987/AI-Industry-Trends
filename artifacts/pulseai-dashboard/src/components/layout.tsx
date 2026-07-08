@@ -73,8 +73,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
   const links = [
     { href: "/", label: "Home" },
-    { href: "/compare", label: "Compare" },
-    { href: "/predict", label: "Predict" },
+    { href: "/compare", label: "Compare & Forecast" },
   ];
 
   return (
