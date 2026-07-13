@@ -40,28 +40,121 @@ function linearRegression(points: Array<{ x: number; y: number }>) {
   return { slope, intercept, r2, mae };
 }
 
-function computeForecastForRow(
-  industryRow: Record<string, string>,
-  projectedYear: number,
-): { projectedValue: number } | null {
+// ── Random Forest Regression ──────────────────────────────────────────────────
+// Simple implementation using bootstrap sampling + depth-limited regression trees.
+
+type RegressionNode =
+  | { type: "leaf"; value: number }
+  | { type: "split"; threshold: number; left: RegressionNode; right: RegressionNode };
+
+function sumSquaredResiduals(pts: Array<{ x: number; y: number }>): number {
+  if (pts.length === 0) return 0;
+  const mean = pts.reduce((s, p) => s + p.y, 0) / pts.length;
+  return pts.reduce((s, p) => s + (p.y - mean) ** 2, 0);
+}
+
+function buildTree(pts: Array<{ x: number; y: number }>, depth: number): RegressionNode {
+  const mean = pts.reduce((s, p) => s + p.y, 0) / pts.length;
+  if (depth === 0 || pts.length <= 2) return { type: "leaf", value: mean };
+
+  const sorted = [...pts].sort((a, b) => a.x - b.x);
+  let bestSSR = Infinity;
+  let bestThreshold = 0;
+
+  for (let i = 0; i < sorted.length - 1; i++) {
+    const threshold = (sorted[i]!.x + sorted[i + 1]!.x) / 2;
+    const left = pts.filter(p => p.x <= threshold);
+    const right = pts.filter(p => p.x > threshold);
+    if (left.length === 0 || right.length === 0) continue;
+    const ssr = sumSquaredResiduals(left) + sumSquaredResiduals(right);
+    if (ssr < bestSSR) { bestSSR = ssr; bestThreshold = threshold; }
+  }
+
+  if (!isFinite(bestSSR)) return { type: "leaf", value: mean };
+  const left = pts.filter(p => p.x <= bestThreshold);
+  const right = pts.filter(p => p.x > bestThreshold);
+  return {
+    type: "split",
+    threshold: bestThreshold,
+    left: buildTree(left, depth - 1),
+    right: buildTree(right, depth - 1),
+  };
+}
+
+function predictTree(node: RegressionNode, x: number): number {
+  if (node.type === "leaf") return node.value;
+  return x <= node.threshold ? predictTree(node.left, x) : predictTree(node.right, x);
+}
+
+// Seeded LCG for deterministic RF across calls (same data → same result)
+function makeLCG(seed: number) {
+  let s = seed;
+  return () => { s = (s * 1664525 + 1013904223) & 0xffffffff; return (s >>> 0) / 0xffffffff; };
+}
+
+function randomForest(points: Array<{ x: number; y: number }>, nTrees = 60) {
+  const rng = makeLCG(42);
+  const trees = Array.from({ length: nTrees }, () => {
+    const sample = Array.from({ length: points.length }, () =>
+      points[Math.floor(rng() * points.length)]!
+    );
+    return buildTree(sample, 3);
+  });
+
+  const predict = (x: number) =>
+    trees.reduce((s, t) => s + predictTree(t, x), 0) / trees.length;
+
+  const meanY = points.reduce((s, p) => s + p.y, 0) / points.length;
+  let ssRes = 0, ssTot = 0, absErrSum = 0;
+  for (const p of points) {
+    const hat = predict(p.x);
+    ssRes += (p.y - hat) ** 2;
+    ssTot += (p.y - meanY) ** 2;
+    absErrSum += Math.abs(p.y - hat);
+  }
+  const r2 = ssTot === 0 ? 1 : 1 - ssRes / ssTot;
+  const mae = absErrSum / points.length;
+
+  return { predict, r2, mae };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+
+function getHistorical(industryRow: Record<string, string>) {
   const historical: Array<{ year: number; adoptionRate: number }> = [];
   for (const { column, year } of YEAR_POINTS) {
     const adoptionRate = toPercent(industryRow[column]);
-    if (adoptionRate === null) continue;
-    historical.push({ year, adoptionRate });
+    if (adoptionRate !== null) historical.push({ year, adoptionRate });
   }
-  if (historical.length === 0) return null;
+  return historical;
+}
 
-  const { slope, intercept } = linearRegression(
-    historical.map((p) => ({ x: p.year, y: p.adoptionRate })),
-  );
-  const projectedValue = Math.min(100, Math.max(0, Math.round((slope * projectedYear + intercept) * 10) / 10));
-  return { projectedValue };
+function computeForecastForRow(
+  industryRow: Record<string, string>,
+  projectedYear: number,
+  model: "linear" | "random-forest" = "linear",
+): { projectedValue: number } | null {
+  const historical = getHistorical(industryRow);
+  if (historical.length === 0) return null;
+  const pts = historical.map((p) => ({ x: p.year, y: p.adoptionRate }));
+
+  let raw: number;
+  if (model === "random-forest") {
+    const rf = randomForest(pts);
+    raw = rf.predict(projectedYear);
+  } else {
+    const { slope, intercept } = linearRegression(pts);
+    raw = slope * projectedYear + intercept;
+  }
+  return { projectedValue: Math.min(100, Math.max(0, Math.round(raw * 10) / 10)) };
 }
 
 router.get("/forecast/all", (req, res) => {
   const yearsAheadParam = req.query.yearsAhead;
   const yearsAhead = Number.parseInt(String(yearsAheadParam ?? ""), 10);
+  const modelParam = req.query.model;
+  const model: "linear" | "random-forest" =
+    modelParam === "random-forest" ? "random-forest" : "linear";
 
   if (Number.isNaN(yearsAhead) || yearsAhead < 1 || yearsAhead > 5) {
     const err: ErrorResponse = { error: "yearsAhead must be an integer between 1 and 5" };
@@ -76,7 +169,7 @@ router.get("/forecast/all", (req, res) => {
     .map((row) => {
       const industry = row["Industry Sector"]?.trim();
       if (!industry) return null;
-      const forecast = computeForecastForRow(row, projectedYear);
+      const forecast = computeForecastForRow(row, projectedYear, model);
       if (!forecast) return null;
       return { industry, projectedYear, projectedValue: forecast.projectedValue };
     })
@@ -88,9 +181,12 @@ router.get("/forecast/all", (req, res) => {
 router.get("/forecast", (req, res) => {
   const industryParam = req.query.industry;
   const yearsAheadParam = req.query.yearsAhead;
+  const modelParam = req.query.model;
 
   const industry = typeof industryParam === "string" ? industryParam : "";
   const yearsAhead = Number.parseInt(String(yearsAheadParam ?? ""), 10);
+  const model: "linear" | "random-forest" =
+    modelParam === "random-forest" ? "random-forest" : "linear";
 
   if (!industry || Number.isNaN(yearsAhead) || yearsAhead < 1 || yearsAhead > 5) {
     const err: ErrorResponse = {
@@ -109,41 +205,39 @@ router.get("/forecast", (req, res) => {
     return;
   }
 
-  const historical: Array<{ year: number; adoptionRate: number }> = [];
-  for (const { column, year } of YEAR_POINTS) {
-    const adoptionRate = toPercent(industryRow[column]);
-    if (adoptionRate === null) continue;
-    historical.push({ year, adoptionRate });
-  }
-
-  const { slope, intercept, r2, mae } = linearRegression(
-    historical.map((p) => ({ x: p.year, y: p.adoptionRate })),
-  );
-
+  const historical = getHistorical(industryRow);
+  const pts = historical.map((p) => ({ x: p.year, y: p.adoptionRate }));
   const lastYear = Math.max(...historical.map((p) => p.year));
   const projectedYear = 2025 + yearsAhead;
 
+  let slope = 0, intercept = 0, r2 = 0, mae = 0;
+  let predictFn: (x: number) => number;
+
+  if (model === "random-forest") {
+    const rf = randomForest(pts);
+    r2 = rf.r2; mae = rf.mae;
+    predictFn = rf.predict;
+  } else {
+    const lr = linearRegression(pts);
+    slope = lr.slope; intercept = lr.intercept; r2 = lr.r2; mae = lr.mae;
+    predictFn = (x) => slope * x + intercept;
+  }
+
   const projected: Array<{ year: number; adoptionRate: number }> = [];
   for (let year = Math.ceil(lastYear) + 1; year <= projectedYear; year++) {
-    const rawValue = slope * year + intercept;
-    const adoptionRate = Math.min(100, Math.max(0, Math.round(rawValue * 10) / 10));
+    const adoptionRate = Math.min(100, Math.max(0, Math.round(predictFn(year) * 10) / 10));
     projected.push({ year, adoptionRate });
   }
 
   const projectedValue =
     projected.length > 0
       ? projected[projected.length - 1]!.adoptionRate
-      : Math.min(100, Math.max(0, Math.round((slope * projectedYear + intercept) * 10) / 10));
+      : Math.min(100, Math.max(0, Math.round(predictFn(projectedYear) * 10) / 10));
 
   const gapTo50 = Math.round((50 - projectedValue) * 10) / 10;
 
   const data = GetForecastResponse.parse({
-    industry,
-    historical,
-    projected,
-    projectedYear,
-    projectedValue,
-    gapTo50,
+    industry, historical, projected, projectedYear, projectedValue, gapTo50,
     slope: Math.round(slope * 1000) / 1000,
     intercept: Math.round(intercept * 1000) / 1000,
     r2: Math.round(r2 * 1000) / 1000,

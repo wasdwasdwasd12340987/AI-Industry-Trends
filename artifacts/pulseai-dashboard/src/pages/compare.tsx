@@ -85,6 +85,7 @@ export function Compare() {
   // --- Forecast state ---
   const [selectedIndustry, setSelectedIndustry] = useState<string>("");
   const [yearsAhead, setYearsAhead] = useState<number>(3);
+  const [forecastModel, setForecastModel] = useState<"linear" | "random-forest">("linear");
 
   React.useEffect(() => {
     if (adoption?.industries?.length && !selectedIndustry) {
@@ -93,8 +94,8 @@ export function Compare() {
   }, [adoption, selectedIndustry]);
 
   const { data: forecast, isLoading: loadingForecast, error } = useGetForecast(
-    { industry: selectedIndustry, yearsAhead },
-    { query: { enabled: !!selectedIndustry, queryKey: getGetForecastQueryKey({ industry: selectedIndustry, yearsAhead }) } }
+    { industry: selectedIndustry, yearsAhead, model: forecastModel },
+    { query: { enabled: !!selectedIndustry, queryKey: getGetForecastQueryKey({ industry: selectedIndustry, yearsAhead, model: forecastModel }) } }
   );
 
   const forecastChartData = React.useMemo(() => {
@@ -117,7 +118,7 @@ export function Compare() {
   );
   const isCapped = rawProjectedValue != null && (rawProjectedValue > 100 || rawProjectedValue < 0);
 
-  const { data: forecastAll, isLoading: loadingForecastAll } = useGetForecastAll({ yearsAhead });
+  const { data: forecastAll, isLoading: loadingForecastAll } = useGetForecastAll({ yearsAhead, model: forecastModel });
   const sortedForecastAll = React.useMemo(
     () => (forecastAll ? [...forecastAll].sort((a, b) => b.projectedValue - a.projectedValue) : []),
     [forecastAll],
@@ -311,6 +312,19 @@ export function Compare() {
                       </Select>
                     )}
                   </div>
+                  <div className="space-y-2">
+                    <Label>Forecasting Model</Label>
+                    <Select value={forecastModel} onValueChange={(v) => setForecastModel(v as "linear" | "random-forest")}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="linear">Linear Regression</SelectItem>
+                        <SelectItem value="random-forest">Random Forest</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
                   <div className="space-y-4">
                     <div className="flex justify-between">
                       <Label>Projection Horizon</Label>

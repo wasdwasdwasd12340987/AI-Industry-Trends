@@ -694,7 +694,7 @@ export const getGetForecastUrl = (params: GetForecastParams,) => {
 }
 
 /**
- * @summary Forecast adoption rate for an industry using linear regression
+ * @summary Forecast adoption rate for an industry
  */
 export const getForecast = async (params: GetForecastParams, options?: RequestInit): Promise<ForecastResponse> => {
 
@@ -741,7 +741,7 @@ export type GetForecastQueryError = ErrorType<ErrorResponse>
 
 
 /**
- * @summary Forecast adoption rate for an industry using linear regression
+ * @summary Forecast adoption rate for an industry
  */
 
 export function useGetForecast<TData = Awaited<ReturnType<typeof getForecast>>, TError = ErrorType<ErrorResponse>>(

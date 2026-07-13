@@ -44,6 +44,44 @@ function truncateLabel(value: string): string {
   return value.length > 10 ? `${value.slice(0, 9)}…` : value;
 }
 
+// Custom Y-axis tick that wraps long labels to at most 2 lines (~15 chars each)
+function WrapTick({ x, y, payload }: { x?: number; y?: number; payload?: { value: string } }) {
+  if (x === undefined || y === undefined || !payload) return null;
+  const words = String(payload.value).split(" ");
+  const lines: string[] = [];
+  let cur = "";
+  for (const word of words) {
+    const candidate = cur ? `${cur} ${word}` : word;
+    if (candidate.length <= 15) {
+      cur = candidate;
+    } else {
+      if (cur) lines.push(cur);
+      cur = word.length > 15 ? `${word.slice(0, 14)}…` : word;
+      if (lines.length >= 1) break;
+    }
+  }
+  if (cur) lines.push(cur);
+  const lineHeight = 13;
+  const totalHeight = lines.length * lineHeight;
+  return (
+    <g transform={`translate(${x},${y})`}>
+      {lines.map((line, i) => (
+        <text
+          key={i}
+          x={0}
+          y={0}
+          dy={-totalHeight / 2 + i * lineHeight + lineHeight / 2}
+          textAnchor="end"
+          fill="var(--color-muted-foreground)"
+          fontSize={11}
+        >
+          {line}
+        </text>
+      ))}
+    </g>
+  );
+}
+
 function formatMillions(value: number): number {
   return Math.round((value / 1_000_000) * 10) / 10;
 }
@@ -136,7 +174,9 @@ export function Home() {
 
   const toolsInMillions = useMemo(() => {
     if (!tools) return [];
-    return tools.map((t) => ({ ...t, valueM: formatMillions(t.value) }));
+    return tools
+      .map((t) => ({ ...t, valueM: formatMillions(t.value) }))
+      .sort((a, b) => b.valueM - a.valueM);
   }, [tools]);
 
   const topFunctions = useMemo(() => {
@@ -497,10 +537,10 @@ export function Home() {
                 ) : (
                   <div className="h-[280px]">
                     <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={topFunctions} layout="vertical" margin={{ left: 40 }}>
+                      <BarChart data={topFunctions} layout="vertical" margin={{ left: 10 }}>
                         <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke={GRID_STROKE} />
                         <XAxis type="number" stroke={AXIS_STROKE} fontSize={12} tickLine={false} tickFormatter={(value) => `${value}%`} />
-                        <YAxis dataKey="function" type="category" stroke={AXIS_STROKE} fontSize={12} tickLine={false} axisLine={false} />
+                        <YAxis dataKey="function" type="category" stroke={AXIS_STROKE} tickLine={false} axisLine={false} width={110} tick={<WrapTick />} />
                         <RechartsTooltip contentStyle={TOOLTIP_STYLE} cursor={CURSOR_FILL} />
                         <Bar dataKey="adoptionRate" name="Adoption Rate" fill="var(--color-chart-4)" radius={[0, 4, 4, 0]} />
                       </BarChart>
@@ -529,10 +569,10 @@ export function Home() {
                 ) : (
                   <div className="h-[280px]">
                     <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={toolsInMillions} layout="vertical" margin={{ left: 40 }}>
+                      <BarChart data={toolsInMillions} layout="vertical" margin={{ left: 10 }}>
                         <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke={GRID_STROKE} />
                         <XAxis type="number" stroke={AXIS_STROKE} fontSize={12} tickLine={false} tickFormatter={(value) => `${value}M`} />
-                        <YAxis dataKey="tool" type="category" stroke={AXIS_STROKE} fontSize={12} tickLine={false} axisLine={false} width={130} />
+                        <YAxis dataKey="tool" type="category" stroke={AXIS_STROKE} tickLine={false} axisLine={false} width={110} tick={<WrapTick />} />
                         <RechartsTooltip contentStyle={TOOLTIP_STYLE} cursor={CURSOR_FILL} formatter={(value: number) => [`${value}M`, "Users"]} />
                         <Bar dataKey="valueM" name="Users (Millions)" fill="var(--color-chart-5)" radius={[0, 4, 4, 0]} />
                       </BarChart>

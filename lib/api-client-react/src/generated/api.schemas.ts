@@ -110,7 +110,16 @@ industry: string;
  * @maximum 5
  */
 yearsAhead: number;
+model?: GetForecastModel;
 };
+
+export type GetForecastModel = typeof GetForecastModel[keyof typeof GetForecastModel];
+
+
+export const GetForecastModel = {
+  linear: 'linear',
+  'random-forest': 'random-forest',
+} as const;
 
 export type GetForecastAllParams = {
 /**
@@ -118,5 +127,14 @@ export type GetForecastAllParams = {
  * @maximum 5
  */
 yearsAhead: number;
+model?: GetForecastAllModel;
 };
+
+export type GetForecastAllModel = typeof GetForecastAllModel[keyof typeof GetForecastAllModel];
+
+
+export const GetForecastAllModel = {
+  linear: 'linear',
+  'random-forest': 'random-forest',
+} as const;
 

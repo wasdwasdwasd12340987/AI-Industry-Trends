@@ -5,6 +5,7 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { GetForecastAllModel } from './getForecastAllModel';
 
 export type GetForecastAllParams = {
 /**
@@ -12,4 +13,5 @@ export type GetForecastAllParams = {
  * @maximum 5
  */
 yearsAhead: number;
+model?: GetForecastAllModel;
 };

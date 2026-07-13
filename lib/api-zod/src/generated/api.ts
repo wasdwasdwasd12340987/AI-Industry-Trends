@@ -114,15 +114,16 @@ export const GetToolUserGrowthResponse = zod.array(GetToolUserGrowthResponseItem
 
 
 /**
- * @summary Forecast adoption rate for an industry using linear regression
+ * @summary Forecast adoption rate for an industry
  */
 export const getForecastQueryYearsAheadMax = 5;
 
-
+export const getForecastQueryModelDefault = `linear`;
 
 export const GetForecastQueryParams = zod.object({
   "industry": zod.coerce.string(),
-  "yearsAhead": zod.coerce.number().min(1).max(getForecastQueryYearsAheadMax)
+  "yearsAhead": zod.coerce.number().min(1).max(getForecastQueryYearsAheadMax),
+  "model": zod.enum(['linear', 'random-forest']).default(getForecastQueryModelDefault)
 })
 
 export const GetForecastResponse = zod.object({
@@ -150,10 +151,11 @@ export const GetForecastResponse = zod.object({
  */
 export const getForecastAllQueryYearsAheadMax = 5;
 
-
+export const getForecastAllQueryModelDefault = `linear`;
 
 export const GetForecastAllQueryParams = zod.object({
-  "yearsAhead": zod.coerce.number().min(1).max(getForecastAllQueryYearsAheadMax)
+  "yearsAhead": zod.coerce.number().min(1).max(getForecastAllQueryYearsAheadMax),
+  "model": zod.enum(['linear', 'random-forest']).default(getForecastAllQueryModelDefault)
 })
 
 export const GetForecastAllResponseItem = zod.object({

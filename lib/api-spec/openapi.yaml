@@ -135,7 +135,7 @@ paths:
     get:
       operationId: getForecast
       tags: [forecast]
-      summary: Forecast adoption rate for an industry using linear regression
+      summary: Forecast adoption rate for an industry
       parameters:
         - name: industry
           in: query
@@ -149,6 +149,13 @@ paths:
             type: integer
             minimum: 1
             maximum: 5
+        - name: model
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [linear, random-forest]
+            default: linear
       responses:
         "200":
           description: Forecast result
@@ -175,6 +182,13 @@ paths:
             type: integer
             minimum: 1
             maximum: 5
+        - name: model
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [linear, random-forest]
+            default: linear
       responses:
         "200":
           description: Forecast summary per industry
