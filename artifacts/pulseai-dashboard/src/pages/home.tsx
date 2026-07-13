@@ -44,6 +44,35 @@ function truncateLabel(value: string): string {
   return value.length > 10 ? `${value.slice(0, 9)}…` : value;
 }
 
+// Custom X-axis tick that wraps long labels onto 2 lines (centered, horizontal)
+function WrapXTick({ x, y, payload }: { x?: number; y?: number; payload?: { value: string } }) {
+  if (x === undefined || y === undefined || !payload) return null;
+  const words = String(payload.value).split(" ");
+  const lines: string[] = [];
+  let cur = "";
+  for (const word of words) {
+    const candidate = cur ? `${cur} ${word}` : word;
+    if (candidate.length <= 10) {
+      cur = candidate;
+    } else {
+      if (cur) lines.push(cur);
+      cur = word;
+      if (lines.length >= 1) break;
+    }
+  }
+  if (cur) lines.push(cur);
+  const lineHeight = 12;
+  return (
+    <g transform={`translate(${x},${y})`}>
+      {lines.map((line, i) => (
+        <text key={i} x={0} y={0} dy={4 + i * lineHeight} textAnchor="middle" fill="var(--color-muted-foreground)" fontSize={10}>
+          {line}
+        </text>
+      ))}
+    </g>
+  );
+}
+
 // Custom Y-axis tick that wraps long labels to at most 2 lines (~15 chars each)
 function WrapTick({ x, y, payload }: { x?: number; y?: number; payload?: { value: string } }) {
   if (x === undefined || y === undefined || !payload) return null;
@@ -446,7 +475,7 @@ export function Home() {
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart data={topInvestmentCountries} margin={{ bottom: 8 }}>
                         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={GRID_STROKE} />
-                        <XAxis dataKey="country" stroke={AXIS_STROKE} fontSize={10} tickLine={false} interval={0} angle={-35} textAnchor="end" height={55} />
+                        <XAxis dataKey="country" stroke={AXIS_STROKE} tickLine={false} interval={0} height={40} tick={<WrapXTick />} />
                         <YAxis stroke={AXIS_STROKE} fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `$${value}B`} />
                         <RechartsTooltip contentStyle={TOOLTIP_STYLE} cursor={CURSOR_FILL} />
                         <Bar dataKey="investmentB" name="Investment" fill="var(--color-chart-3)" radius={[4, 4, 0, 0]} />
