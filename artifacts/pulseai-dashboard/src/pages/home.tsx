@@ -47,7 +47,8 @@ function truncateLabel(value: string): string {
 // Custom Y-axis tick that wraps long labels to at most 2 lines (~15 chars each)
 function WrapTick({ x, y, payload }: { x?: number; y?: number; payload?: { value: string } }) {
   if (x === undefined || y === undefined || !payload) return null;
-  const words = String(payload.value).split(" ");
+  const normalized = String(payload.value).replace(/\//g, "/ ").replace(/\s+/g, " ").trim();
+  const words = normalized.split(" ");
   const lines: string[] = [];
   let cur = "";
   for (const word of words) {
@@ -445,7 +446,7 @@ export function Home() {
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart data={topInvestmentCountries} margin={{ bottom: 8 }}>
                         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={GRID_STROKE} />
-                        <XAxis dataKey="country" stroke={AXIS_STROKE} fontSize={11} tickLine={false} interval={0} angle={0} textAnchor="middle" height={30} tickFormatter={truncateLabel} />
+                        <XAxis dataKey="country" stroke={AXIS_STROKE} fontSize={10} tickLine={false} interval={0} angle={-35} textAnchor="end" height={55} />
                         <YAxis stroke={AXIS_STROKE} fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `$${value}B`} />
                         <RechartsTooltip contentStyle={TOOLTIP_STYLE} cursor={CURSOR_FILL} />
                         <Bar dataKey="investmentB" name="Investment" fill="var(--color-chart-3)" radius={[4, 4, 0, 0]} />
