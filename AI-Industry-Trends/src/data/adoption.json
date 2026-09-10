@@ -1,0 +1,25 @@
+{
+  "years": [2022, 2023, 2024.25, 2024.75, 2025],
+  "sectors": [
+    { "name": "Technology / Software", "values": [70, 76, 84, 88, 92] },
+    { "name": "Professional Services", "values": [50, 57, 72, 76, 82] },
+    { "name": "Financial Services / BFSI", "values": [55, 61, 70, 74, 80] },
+    { "name": "Media & Telecom", "values": [48, 55, 65, 68, 74] },
+    { "name": "Retail & Consumer Goods", "values": [38, 45, 56, 60, 68] },
+    { "name": "Energy & Materials", "values": [32, 40, 55, 59, 66] },
+    { "name": "Healthcare & Pharma", "values": [35, 42, 52, 58, 65] },
+    { "name": "Manufacturing", "values": [40, 46, 55, 59, 65] },
+    { "name": "Logistics & Supply Chain", "values": [30, 38, 50, 55, 63] },
+    { "name": "Education", "values": [22, 30, 42, 48, 58] },
+    { "name": "Legal Services", "values": [15, 22, 35, 42, 52] },
+    { "name": "Government & Public", "values": [20, 28, 36, 42, 50] },
+    { "name": "Real Estate & Const.", "values": [18, 24, 32, 38, 46] },
+    { "name": "Environment / Climate", "values": [12, 18, 28, 34, 44] },
+    { "name": "Agriculture", "values": [15, 20, 29, 34, 42] }
+  ],
+  "modelResults": [
+    { "model": "Linear Regression", "mae": 0, "mse": 0, "r2": 1.0 },
+    { "model": "Random Forest", "mae": 0.008303, "mse": 0.000113, "r2": 0.994254 },
+    { "model": "Neural Network", "mae": 0.730245, "mse": 0.552994, "r2": -27.019569 }
+  ]
+}
