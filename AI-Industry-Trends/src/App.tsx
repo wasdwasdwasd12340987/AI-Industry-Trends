@@ -59,6 +59,29 @@ function App() {
         <a className="paper-link" href="/paper.html">Read the full research paper →</a>
       </header>
 
+      <section className="stat-grid">
+        <div className="stat-card">
+          <div className="stat-label">Orgs using AI in ≥1 function (global)</div>
+          <div className="stat-value">88%</div>
+          <div className="stat-source">2025 · McKinsey State of AI 2025</div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-label">Orgs using GenAI specifically</div>
+          <div className="stat-value">79%</div>
+          <div className="stat-source">2025 · McKinsey State of AI 2025</div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-label">Global corporate AI investment</div>
+          <div className="stat-value">$252.3B</div>
+          <div className="stat-source">2024 · Stanford AI Index 2025</div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-label">GenAI-specific private investment</div>
+          <div className="stat-value">$33.9B</div>
+          <div className="stat-source">2024 · Stanford AI Index 2025 (+18.7% YoY)</div>
+        </div>
+      </section>
+
       <section className="panel">
         <div className="panel-head">
           <h2>Adoption over time</h2>
