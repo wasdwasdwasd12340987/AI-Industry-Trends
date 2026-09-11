@@ -2,8 +2,7 @@
 
 > Real-time pulse on enterprise AI integration, investment, and sentiment across industries.
 
-**Live app:** [https://4eacc34a-7889-422a-9687-062527c2aa9d-00-20r95111vxo8c.picard.replit.dev
-](https://ai-industry-trends--moekofahi1.replit.app/)
+**Live app:** [https://aiindustrytrends.vercel.app/](https://aiindustrytrends.vercel.app/)
 ---
 
 ## What it does
